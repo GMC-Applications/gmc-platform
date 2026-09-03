@@ -1,0 +1,6 @@
+@Gmc.Api_HostAddress = http://localhost:5105
+
+GET {{Gmc.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
