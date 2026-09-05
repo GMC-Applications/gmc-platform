@@ -1,22 +1,65 @@
+using Gmc.Api.Data;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+builder.Services.AddDbContext<ChurchDbContext>(options =>
+{
+    options.UseNpgsql(
+        builder.Configuration
+            .GetConnectionString("Postgres"));
+});
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Clients", policy =>
+    {
+        policy
+            .AllowAnyOrigin()
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
+
+app.UseCors("Clients");
 
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
+
+app.MapGet("/api/v1/health", () =>
+{
+    return Results.Ok(new
+    {
+        status = "ok",
+        service = "GMC API",
+        utc = DateTime.UtcNow
+    });
+});
+
+app.MapGet("/", () =>
+{
+    return Results.Ok(new
+    {
+        message = "GMC API is running",
+        documentation = "/swagger",
+        health = "/api/v1/health"
+    });
+});
+
 
 app.MapControllers();
 
